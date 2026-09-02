@@ -7,6 +7,7 @@ const HEARTBEAT_TIMEOUT = 25_000;
 const state = {
   isStreamClient: false,
   viewerHeartbeats: new Map(),
+  configApps: new Set(),
   shell: null,
   chatList: null,
   diceObserver: null,
@@ -17,34 +18,46 @@ const state = {
   cameraTimer: null
 };
 
-const appv1 = globalThis.foundry?.appv1?.api;
-const FormApplicationBase = globalThis.FormApplication ?? appv1?.FormApplication;
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
-class StreamConnectionConfig extends FormApplicationBase {
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      id: "tactical-stream-view-config",
+class StreamConnectionConfig extends HandlebarsApplicationMixin(ApplicationV2) {
+  static DEFAULT_OPTIONS = {
+    id: "tactical-stream-view-config",
+    tag: "form",
+    classes: ["tactical-stream-config-window"],
+    position: { width: 620, height: "auto" },
+    window: {
       title: "Tactical Stream View · Stream Connection",
-      template: `modules/${MODULE_ID}/templates/stream-connection.hbs`,
-      width: 620,
-      height: "auto",
+      icon: "fa-solid fa-tower-broadcast",
+      resizable: false
+    },
+    form: {
       closeOnSubmit: false,
       submitOnChange: false,
-      classes: ["tactical-stream-config-window"]
-    });
-  }
+      handler: this._handleSubmit
+    }
+  };
 
-  getData() {
+  static PARTS = {
+    connection: {
+      template: `modules/${MODULE_ID}/templates/stream-connection.hbs`
+    }
+  };
+
+  async _prepareContext(options) {
+    const context = await super._prepareContext(options);
     const streamUserId = setting("streamUserId");
     return {
+      ...context,
       streamUserId,
+      streamPassword: setting("streamPassword"),
       users: game.users.contents.map(user => ({
         id: user.id,
         name: user.name,
         isGM: user.isGM,
         selected: user.id === streamUserId
       })),
-      sourceUrl: buildStreamUrl(),
+      sourceUrl: buildStreamUrl({ userId: streamUserId }),
       viewerConnected: isViewerConnected(streamUserId),
       streamTitle: setting("streamTitle"),
       accentColor: normalizeHex(setting("accentColor")),
@@ -53,10 +66,12 @@ class StreamConnectionConfig extends FormApplicationBase {
     };
   }
 
-  activateListeners(html) {
-    super.activateListeners(html);
-    const root = html?.[0] ?? html;
-    root?.querySelector('[data-action="copy-url"]')?.addEventListener("click", copyStreamUrl);
+  async _onRender(context, options) {
+    await super._onRender(context, options);
+    state.configApps.add(this);
+    const root = this.element;
+    root?.querySelector('[data-action="copy-url"]')?.addEventListener("click", () => copyStreamUrl({ root }));
+    root?.querySelector('[data-action="copy-auto-url"]')?.addEventListener("click", () => copyStreamUrl({ root, includePassword: true }));
     root?.querySelector('[data-action="test-viewer"]')?.addEventListener("click", requestViewerStatus);
 
     const picker = root?.querySelector("#tsv-accent-picker");
@@ -69,21 +84,28 @@ class StreamConnectionConfig extends FormApplicationBase {
     });
   }
 
-  async _updateObject(_event, formData) {
-    const maxChatCards = clampNumber(formData.maxChatCards, 3, 16, 7);
-    const accentColor = normalizeHex(formData.accentColor);
+  async _onClose(options) {
+    state.configApps.delete(this);
+    await super._onClose(options);
+  }
+
+  static async _handleSubmit(_event, _form, formData) {
+    const data = formData.object;
+    const maxChatCards = clampNumber(data.maxChatCards, 3, 16, 7);
+    const accentColor = normalizeHex(data.accentColor);
     const updates = {
-      streamUserId: String(formData.streamUserId ?? ""),
-      streamTitle: String(formData.streamTitle ?? "Tactical View").trim().slice(0, 60) || "Tactical View",
+      streamUserId: String(data.streamUserId ?? ""),
+      streamTitle: String(data.streamTitle ?? "Tactical View").trim().slice(0, 60) || "Tactical View",
       accentColor,
       maxChatCards,
-      followGmCamera: Boolean(formData.followGmCamera)
+      followGmCamera: Boolean(data.followGmCamera)
     };
 
     await Promise.all(Object.entries(updates).map(([key, value]) => game.settings.set(MODULE_ID, key, value)));
+    await game.settings.set(MODULE_ID, "streamPassword", String(data.streamPassword ?? ""));
     game.socket.emit(SOCKET_NAME, { type: "settings-refresh" });
     ui.notifications.info(localize("TSV.Settings.Saved"));
-    this.render(false);
+    this.render();
   }
 }
 
@@ -121,6 +143,7 @@ function registerSettings() {
   });
 
   registerSetting("streamUserId", String, "", false);
+  registerSetting("streamPassword", String, "", false, undefined, "client");
   registerSetting("broadcastEnabled", Boolean, false, false, applyBroadcastState);
   registerSetting("followGmCamera", Boolean, true, false);
   registerSetting("streamTitle", String, "TACTICAL VIEW", false, refreshStreamLayout);
@@ -128,10 +151,10 @@ function registerSettings() {
   registerSetting("maxChatCards", Number, 7, false, trimChatCards);
 }
 
-function registerSetting(key, type, defaultValue, config, onChange) {
+function registerSetting(key, type, defaultValue, config, onChange, scope = "world") {
   game.settings.register(MODULE_ID, key, {
     name: key,
-    scope: "world",
+    scope,
     config,
     type,
     default: defaultValue,
@@ -179,7 +202,7 @@ function registerSceneControls() {
         icon: "fa-regular fa-copy",
         order: 3,
         button: true,
-        onChange: copyStreamUrl
+        onChange: () => copyStreamUrl()
       },
       configure: {
         name: "configure",
@@ -187,7 +210,7 @@ function registerSceneControls() {
         icon: "fa-solid fa-sliders",
         order: 4,
         button: true,
-        onChange: () => new StreamConnectionConfig().render(true)
+        onChange: () => new StreamConnectionConfig().render({ force: true })
       }
     };
 
@@ -591,9 +614,8 @@ function isViewerConnected(userId) {
 function updateOpenConnectionWindows() {
   const userId = setting("streamUserId");
   const connected = isViewerConnected(userId);
-  for (const app of Object.values(ui.windows ?? {})) {
-    if (!(app instanceof StreamConnectionConfig)) continue;
-    const root = app.element?.[0] ?? app.element;
+  for (const app of state.configApps) {
+    const root = app.element;
     const status = root?.querySelector?.("[data-viewer-state]");
     if (!status) continue;
     status.classList.toggle("is-connected", connected);
@@ -611,15 +633,37 @@ function shouldUseStreamLayout() {
   return forced;
 }
 
-function buildStreamUrl() {
-  const url = new URL(window.location.href);
-  url.hash = "";
-  url.searchParams.set(STREAM_QUERY_KEY, "1");
+function buildStreamUrl({ userId = setting("streamUserId"), password = "", automatic = false } = {}) {
+  const gameRoute = new URL(foundry.utils.getRoute("game"), window.location.origin);
+  gameRoute.pathname = gameRoute.pathname.replace(/\/game\/?$/, `/modules/${MODULE_ID}/stream.html`);
+  gameRoute.search = "";
+  gameRoute.hash = "";
+  if (userId) {
+    gameRoute.searchParams.set("user", userId);
+    const userName = game.users.get(userId)?.name;
+    if (userName) gameRoute.searchParams.set("name", userName);
+  }
+  gameRoute.searchParams.set("v", game.modules.get(MODULE_ID)?.version ?? "1");
+  if (automatic && password) gameRoute.hash = `login=${encodeSourceCredential(password)}`;
+  const url = gameRoute;
   return url.toString();
 }
 
-async function copyStreamUrl() {
-  const url = buildStreamUrl();
+async function copyStreamUrl({ root = null, includePassword = false } = {}) {
+  const userId = root?.querySelector("[name='streamUserId']")?.value ?? setting("streamUserId");
+  const passwordField = root?.querySelector("[name='streamPassword']");
+  const password = passwordField?.value ?? setting("streamPassword");
+  if (!userId) {
+    ui.notifications.warn("Choose the dedicated Stream login first.");
+    root?.querySelector("[name='streamUserId']")?.focus();
+    return;
+  }
+  if (includePassword && !password) {
+    ui.notifications.warn("Enter the Stream password before copying the automatic source URL.");
+    passwordField?.focus();
+    return;
+  }
+  const url = buildStreamUrl({ userId, password, automatic: includePassword });
   try {
     await navigator.clipboard.writeText(url);
   } catch (_error) {
@@ -632,7 +676,14 @@ async function copyStreamUrl() {
     document.execCommand("copy");
     input.remove();
   }
-  ui.notifications.info(localize("TSV.Notifications.UrlCopied"));
+  ui.notifications.info(includePassword ? "Automatic-login browser source copied." : localize("TSV.Notifications.UrlCopied"));
+}
+
+function encodeSourceCredential(password) {
+  const bytes = new TextEncoder().encode(JSON.stringify({ password: String(password) }));
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function setting(key) {
