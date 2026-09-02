@@ -1,0 +1,19 @@
+{
+  "TSV.ModuleName": "Tactical Stream View",
+  "TSV.Settings.MenuName": "Stream Connection",
+  "TSV.Settings.MenuLabel": "Configure Stream Connection",
+  "TSV.Settings.MenuHint": "Choose the Foundry login used by the permanent browser source and tune the square broadcast layout.",
+  "TSV.Controls.Name": "Stream",
+  "TSV.Controls.Title": "Tactical Stream View",
+  "TSV.Controls.Broadcast": "Push Stream Mode",
+  "TSV.Controls.Follow": "Follow GM Camera",
+  "TSV.Controls.PushView": "Push Current Tactical View",
+  "TSV.Controls.CopyUrl": "Copy Browser Source URL",
+  "TSV.Controls.Configure": "Configure Stream Connection",
+  "TSV.Notifications.UrlCopied": "Tactical Stream View browser-source URL copied.",
+  "TSV.Notifications.BroadcastOn": "Stream Mode is live.",
+  "TSV.Notifications.BroadcastOff": "Stream Mode is standing by.",
+  "TSV.Notifications.NoViewer": "No Stream viewer is connected yet. The view will sync when it connects.",
+  "TSV.Notifications.ViewPushed": "Current tactical view pushed to the Stream viewer.",
+  "TSV.Settings.Saved": "Tactical Stream View settings saved."
+}
