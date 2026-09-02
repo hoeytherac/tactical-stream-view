@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tactical Stream View · Connecting</title>
+  <link rel="stylesheet" href="styles/stream-launcher.css">
+  <script type="module" src="scripts/stream-launcher.js"></script>
+</head>
+<body>
+  <main class="launcher" aria-live="polite">
+    <div class="signal" aria-hidden="true"><span></span><span></span><span></span></div>
+    <p class="eyebrow">TACTICAL STREAM VIEW</p>
+    <h1>Connecting the stream</h1>
+    <p class="status" data-status>Opening the dedicated Foundry session…</p>
+
+    <form class="signin" data-signin hidden>
+      <p>The automatic password was not included or was rejected. Enter the password for <strong data-user-name>Stream</strong>.</p>
+      <label for="stream-password">Stream password</label>
+      <input id="stream-password" name="password" type="password" autocomplete="current-password" required>
+      <button type="submit">Sign in and open stream view</button>
+    </form>
+
+    <p class="resolution" data-resolution hidden></p>
+    <p class="footnote">This page signs in through Foundry’s own join screen, then replaces itself with the clean broadcast layout.</p>
+  </main>
+  <iframe class="foundry-session" data-foundry-session title="Foundry sign-in session"></iframe>
+</body>
+</html>

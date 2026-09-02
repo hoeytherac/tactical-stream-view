@@ -36,22 +36,21 @@ https://github.com/hoeytherac/tactical-stream-view/releases/latest/download/modu
 ## One-time Foundry setup
 
 1. Open Foundry's **User Management** and create a Player-level user named `Stream`.
-2. Give that user a password. Do not make it a GM or Assistant GM.
+2. Give that user a unique password. Do not make it a GM or Assistant GM.
 3. Give the Stream user Observer permission for the party actors whose shared vision should be visible on the broadcast.
 4. Go to **Game Settings → Configure Settings → Module Settings → Tactical Stream View → Configure Stream Connection**.
-5. Choose the `Stream` login, set the title and accent color, then save.
+5. Choose the `Stream` login, enter its password, set the title and accent color, then save.
 
-The module intentionally does not store the Stream user's password. Foundry module settings are world data and are not an appropriate place for a reusable password.
+The Stream password is stored only as a client setting in the GM browser where it was entered. It is not written to the shared world database or GitHub.
 
 ## Add the permanent source to Meld Studio
 
-1. Open **Configure Stream Connection** and click **Copy** beside the browser-source URL.
+1. Open **Configure Stream Connection** and click **Copy automatic-login URL**.
 2. Add a Browser layer in Meld and paste the URL.
 3. Set the layer to **1080 × 1080**.
-4. Use Meld's browser interaction mode once, choose the `Stream` Foundry user, and enter its Foundry password.
-5. Leave that browser source in the scene. Its browser session remains signed in, and the selected Stream user automatically enters the broadcast layout whenever the source connects.
+4. Leave that browser source in the scene. Its private URL fragment signs in through Foundry and the selected Stream user automatically enters the broadcast layout whenever the source connects.
 
-If Meld clears its browser cache or cookies, repeat only the interactive sign-in step.
+The automatic URL contains the Stream password in an encoded URL fragment. The fragment is not sent to web servers as part of an HTTP request, but anyone who can read the browser-source URL can recover it. Use only a dedicated, low-permission Player account. If you prefer not to store the password in Meld, use **Copy safe URL** and enter the password once through Meld's interaction mode.
 
 ## During a session
 
@@ -83,8 +82,13 @@ The main color can be changed in **Configure Stream Connection**. For campaign-s
 
 ## Troubleshooting
 
-**The browser source shows Foundry's login screen**  
-Use Meld's browser interaction mode and sign in once as the configured Stream user.
+**The browser source asks for the Stream password**
+
+The safe URL was used, the stored password is wrong, or Foundry rejected the previous session. Enter the Stream password there, or copy a fresh automatic-login URL from the module settings.
+
+**Foundry warns that the window is 1280 × 720**
+
+Edit the Meld Browser layer and set both width and height to 1080. A 720-pixel-tall source is below Foundry's minimum supported height and is not the intended square composition.
 
 **The source is signed in but does not use the stream layout**  
 Confirm the same user is selected under Configure Stream Connection, then reload the browser source.
