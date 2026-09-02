@@ -1,0 +1,51 @@
+name: Publish Foundry Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build Foundry module archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p staging/tactical-stream-view
+          rsync -a \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'staging' \
+            --exclude '*.zip' \
+            ./ staging/tactical-stream-view/
+          cd staging
+          zip -r "tactical-stream-view-v${VERSION}.zip" tactical-stream-view
+          cp ../module.json ./module.json
+
+      - name: Publish release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" \
+              "staging/module.json" \
+              "staging/tactical-stream-view-v${VERSION}.zip" \
+              --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              "staging/module.json" \
+              "staging/tactical-stream-view-v${VERSION}.zip" \
+              --title "Tactical Stream View ${GITHUB_REF_NAME}" \
+              --generate-notes
+          fi
