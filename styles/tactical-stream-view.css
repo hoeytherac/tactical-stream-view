@@ -545,6 +545,8 @@ body.tsv-stream-client:not(.tsv-broadcast-live) #dice-box-canvas {
 /* Stream Connection settings window */
 .tactical-stream-config-window .window-content {
   padding: 0 !important;
+  min-height: 0;
+  overflow-y: auto !important;
   background: #0a1019;
   color: #dce8f2;
 }
@@ -684,8 +686,13 @@ body.tsv-stream-client:not(.tsv-broadcast-live) #dice-box-canvas {
 .tsv-check-group input[type="checkbox"] { width: 18px; height: 18px; margin: 0; }
 
 .tsv-config-footer {
+  position: sticky;
+  z-index: 2;
+  bottom: 0;
   justify-content: space-between;
+  flex: 0 0 auto;
   padding: 14px 22px;
+  border-top: 1px solid rgba(255,255,255,.08);
   background: #070c13;
   color: #8fa3b4;
   font-size: 11px;
