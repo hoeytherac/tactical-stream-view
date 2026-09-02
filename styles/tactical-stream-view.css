@@ -631,6 +631,12 @@ body.tsv-stream-client:not(.tsv-broadcast-live) #dice-box-canvas {
 
 .tsv-security-note i { margin-top: 2px; color: var(--tsv-accent); }
 .tsv-security-note p { margin: 0; line-height: 1.38; }
+.tsv-security-note code {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, .28);
+  color: #d9ecfa;
+}
 
 .tsv-copy-row,
 .tsv-color-row,
@@ -644,6 +650,18 @@ body.tsv-stream-client:not(.tsv-broadcast-live) #dice-box-canvas {
 .tsv-copy-row input { flex: 1; min-width: 0; font-family: monospace; font-size: 11px; }
 .tsv-copy-row button,
 .tsv-viewer-state button { flex: 0 0 auto; width: auto; }
+
+.tsv-auto-source-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.tsv-auto-source-row button {
+  width: auto;
+  border-color: color-mix(in srgb, var(--tsv-accent) 65%, transparent);
+  background: color-mix(in srgb, var(--tsv-accent) 16%, rgba(1, 5, 10, .8));
+}
 
 .tsv-color-row input[type="color"] { flex: 0 0 42px; padding: 2px; }
 .tsv-color-row input[type="text"] { flex: 1; min-width: 0; font-family: monospace; }

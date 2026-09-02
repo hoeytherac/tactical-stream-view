@@ -1,0 +1,154 @@
+:root {
+  color-scheme: dark;
+  --accent: #2f9dff;
+  --panel: rgba(4, 10, 19, .92);
+  --text: #edf7ff;
+  --muted: #9fb5c8;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: clamp(22px, 5vw, 70px);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(47, 157, 255, .17), transparent 30%),
+    linear-gradient(145deg, #02050b, #07111d 52%, #02050a);
+  color: var(--text);
+  font-family: "Signika", Inter, system-ui, sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 12px;
+  border: 1px solid rgba(47, 157, 255, .42);
+  border-radius: 16px;
+  box-shadow: inset 0 0 70px rgba(0, 0, 0, .7), 0 0 28px rgba(47, 157, 255, .1);
+  pointer-events: none;
+}
+
+.launcher {
+  width: min(620px, 100%);
+  padding: clamp(26px, 5vw, 54px);
+  border: 1px solid rgba(47, 157, 255, .42);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .55), inset 0 1px rgba(255, 255, 255, .04);
+  text-align: center;
+}
+
+.signal {
+  display: inline-flex;
+  align-items: end;
+  gap: 5px;
+  height: 42px;
+  margin-bottom: 20px;
+}
+
+.signal span {
+  width: 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  animation: signal 1.1s ease-in-out infinite alternate;
+}
+
+.signal span:nth-child(1) { height: 16px; }
+.signal span:nth-child(2) { height: 30px; animation-delay: .16s; }
+.signal span:nth-child(3) { height: 42px; animation-delay: .32s; }
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .24em;
+}
+
+h1 {
+  margin: 0 0 14px;
+  font-family: Georgia, "Palatino Linotype", serif;
+  font-size: clamp(29px, 5vw, 50px);
+  line-height: 1;
+}
+
+.status,
+.footnote,
+.resolution,
+.signin p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.signin {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid rgba(47, 157, 255, .25);
+  border-radius: 10px;
+  background: rgba(1, 5, 10, .56);
+  text-align: left;
+}
+
+.signin[hidden] { display: none; }
+.signin p { margin: 0 0 4px; }
+.signin strong { color: white; }
+.signin label { font-size: 12px; font-weight: 750; }
+
+.signin input,
+.signin button {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(125, 183, 226, .32);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, .42);
+  color: white;
+  font: inherit;
+}
+
+.signin input { padding: 9px 12px; }
+.signin button {
+  margin-top: 3px;
+  border-color: rgba(47, 157, 255, .65);
+  background: rgba(47, 157, 255, .18);
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.resolution {
+  margin: 20px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 183, 77, .35);
+  border-radius: 7px;
+  background: rgba(255, 154, 46, .08);
+  color: #ffd7a0;
+  font-size: 12px;
+}
+
+.footnote {
+  margin: 22px 0 0;
+  font-size: 11px;
+  opacity: .72;
+}
+
+.foundry-session { display: none; }
+
+@keyframes signal {
+  from { opacity: .32; transform: scaleY(.7); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal span { animation: none; }
+}
