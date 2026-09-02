@@ -1,0 +1,76 @@
+<form class="tsv-config-form" autocomplete="off">
+  <header class="tsv-config-hero">
+    <div class="tsv-config-mark" aria-hidden="true"><i class="fa-solid fa-tower-broadcast"></i></div>
+    <div>
+      <p class="tsv-config-kicker">PERMANENT BROWSER SOURCE</p>
+      <h2>Tactical Stream View</h2>
+      <p>Choose the low-permission Foundry user that Meld will use. Once that user signs in, this layout opens automatically.</p>
+    </div>
+  </header>
+
+  <section class="tsv-config-section">
+    <div class="form-group">
+      <label for="tsv-stream-user">Stream login</label>
+      <select id="tsv-stream-user" name="streamUserId">
+        <option value="" {{#unless streamUserId}}selected{{/unless}}>Choose a dedicated Stream user…</option>
+        {{#each users}}
+          <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}{{#if isGM}} — GM (not recommended){{/if}}</option>
+        {{/each}}
+      </select>
+      <p class="hint">Create a Player-level user named “Stream” in Foundry first. Give it Observer access to the actors whose vision should appear on stream.</p>
+    </div>
+
+    <div class="tsv-security-note">
+      <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+      <p><strong>Password stays with Foundry.</strong> This module never saves or broadcasts it. Use Meld’s Interact mode once to sign in; Meld keeps that browser session for future streams.</p>
+    </div>
+
+    <div class="form-group">
+      <label for="tsv-source-url">Meld browser-source URL</label>
+      <div class="tsv-copy-row">
+        <input id="tsv-source-url" type="text" value="{{sourceUrl}}" readonly spellcheck="false">
+        <button type="button" data-action="copy-url"><i class="fa-regular fa-copy"></i> Copy</button>
+      </div>
+      <p class="hint">Use a 1080 × 1080 browser layer for the intended square composition.</p>
+    </div>
+
+    <div class="tsv-viewer-state {{#if viewerConnected}}is-connected{{else}}is-offline{{/if}}" data-viewer-state>
+      <span class="tsv-status-dot" aria-hidden="true"></span>
+      <span>{{#if viewerConnected}}Stream viewer connected{{else}}Stream viewer not connected yet{{/if}}</span>
+      <button type="button" data-action="test-viewer">Check connection</button>
+    </div>
+  </section>
+
+  <section class="tsv-config-section tsv-config-grid">
+    <div class="form-group">
+      <label for="tsv-title">Broadcast title</label>
+      <input id="tsv-title" type="text" name="streamTitle" value="{{streamTitle}}" maxlength="60">
+    </div>
+
+    <div class="form-group">
+      <label for="tsv-accent">Accent color</label>
+      <div class="tsv-color-row">
+        <input id="tsv-accent-picker" type="color" value="{{accentColor}}" aria-label="Choose accent color">
+        <input id="tsv-accent" type="text" name="accentColor" value="{{accentColor}}" pattern="#[0-9a-fA-F]{6}" maxlength="7">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="tsv-card-count">Visible chat cards</label>
+      <input id="tsv-card-count" type="number" name="maxChatCards" value="{{maxChatCards}}" min="3" max="16" step="1">
+    </div>
+
+    <div class="form-group tsv-check-group">
+      <label>
+        <input type="checkbox" name="followGmCamera" {{#if followGmCamera}}checked{{/if}}>
+        <span>Follow the GM camera</span>
+      </label>
+      <p class="hint">Keeps the Stream viewer on the same tactical view while the broadcast is live.</p>
+    </div>
+  </section>
+
+  <footer class="tsv-config-footer">
+    <span><i class="fa-solid fa-dice-d20"></i> Dice So Nice is detected automatically.</span>
+    <button type="submit"><i class="fa-solid fa-floppy-disk"></i> Save settings</button>
+  </footer>
+</form>
