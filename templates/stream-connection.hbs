@@ -1,10 +1,10 @@
-<form class="tsv-config-form" autocomplete="off">
+<div class="tsv-config-form">
   <header class="tsv-config-hero">
     <div class="tsv-config-mark" aria-hidden="true"><i class="fa-solid fa-tower-broadcast"></i></div>
     <div>
       <p class="tsv-config-kicker">PERMANENT BROWSER SOURCE</p>
       <h2>Tactical Stream View</h2>
-      <p>Choose the low-permission Foundry user that Meld will use. Once that user signs in, this layout opens automatically.</p>
+      <p>Choose the low-permission Foundry user and password that Meld will use. The permanent source can then sign itself in.</p>
     </div>
   </header>
 
@@ -20,18 +20,27 @@
       <p class="hint">Create a Player-level user named “Stream” in Foundry first. Give it Observer access to the actors whose vision should appear on stream.</p>
     </div>
 
+    <div class="form-group">
+      <label for="tsv-stream-password">Stream password</label>
+      <input id="tsv-stream-password" type="password" name="streamPassword" value="{{streamPassword}}" autocomplete="off" spellcheck="false">
+      <p class="hint">Saved only in this GM browser. It is never written to the shared world or uploaded to GitHub.</p>
+    </div>
+
     <div class="tsv-security-note">
       <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-      <p><strong>Password stays with Foundry.</strong> This module never saves or broadcasts it. Use Meld’s Interact mode once to sign in; Meld keeps that browser session for future streams.</p>
+      <p><strong>Automatic sign-in:</strong> the copied automatic URL places this password in its private <code>#fragment</code>. Foundry receives it only when the source signs in. Anyone who can read your Meld browser-source URL can also recover it, so use a dedicated Player-level Stream account.</p>
     </div>
 
     <div class="form-group">
       <label for="tsv-source-url">Meld browser-source URL</label>
       <div class="tsv-copy-row">
         <input id="tsv-source-url" type="text" value="{{sourceUrl}}" readonly spellcheck="false">
-        <button type="button" data-action="copy-url"><i class="fa-regular fa-copy"></i> Copy</button>
+        <button type="button" data-action="copy-url"><i class="fa-regular fa-copy"></i> Copy safe URL</button>
       </div>
-      <p class="hint">Use a 1080 × 1080 browser layer for the intended square composition.</p>
+      <div class="tsv-auto-source-row">
+        <button type="button" data-action="copy-auto-url"><i class="fa-solid fa-key"></i> Copy automatic-login URL</button>
+      </div>
+      <p class="hint">Use the automatic URL in a 1080 × 1080 browser layer. The safe URL asks for the Stream password once inside Meld.</p>
     </div>
 
     <div class="tsv-viewer-state {{#if viewerConnected}}is-connected{{else}}is-offline{{/if}}" data-viewer-state>
@@ -73,4 +82,4 @@
     <span><i class="fa-solid fa-dice-d20"></i> Dice So Nice is detected automatically.</span>
     <button type="submit"><i class="fa-solid fa-floppy-disk"></i> Save settings</button>
   </footer>
-</form>
+</div>
