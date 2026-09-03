@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+
+- Made the Stream password save automatically in the local GM browser when changed or when the settings window closes.
+- Made Copy automatic-login URL persist the entered password before copying the source URL.
+- Clarified that the password is never stored in shared world settings or uploaded to GitHub.
+
 ## 1.0.2
 
 - Fixed the ApplicationV2 settings window clipping the Save settings button on shorter screens.
