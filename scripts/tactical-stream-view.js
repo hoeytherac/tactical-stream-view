@@ -74,6 +74,16 @@ class StreamConnectionConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     root?.querySelector('[data-action="copy-auto-url"]')?.addEventListener("click", () => copyStreamUrl({ root, includePassword: true }));
     root?.querySelector('[data-action="test-viewer"]')?.addEventListener("click", requestViewerStatus);
 
+    const passwordField = root?.querySelector("[name='streamPassword']");
+    passwordField?.addEventListener("change", async () => {
+      try {
+        await persistStreamPassword(passwordField.value);
+      } catch (error) {
+        console.error(`${MODULE_ID} | Could not save the local Stream password.`, error);
+        ui.notifications.error("The Stream password could not be saved in this browser.");
+      }
+    });
+
     const picker = root?.querySelector("#tsv-accent-picker");
     const text = root?.querySelector("#tsv-accent");
     picker?.addEventListener("input", () => {
@@ -85,6 +95,8 @@ class StreamConnectionConfig extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   async _onClose(options) {
+    const password = this.element?.querySelector("[name='streamPassword']")?.value;
+    if (password !== undefined) await persistStreamPassword(password);
     state.configApps.delete(this);
     await super._onClose(options);
   }
@@ -102,7 +114,7 @@ class StreamConnectionConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     };
 
     await Promise.all(Object.entries(updates).map(([key, value]) => game.settings.set(MODULE_ID, key, value)));
-    await game.settings.set(MODULE_ID, "streamPassword", String(data.streamPassword ?? ""));
+    await persistStreamPassword(data.streamPassword);
     game.socket.emit(SOCKET_NAME, { type: "settings-refresh" });
     ui.notifications.info(localize("TSV.Settings.Saved"));
     this.render();
@@ -663,6 +675,7 @@ async function copyStreamUrl({ root = null, includePassword = false } = {}) {
     passwordField?.focus();
     return;
   }
+  if (includePassword) await persistStreamPassword(password);
   const url = buildStreamUrl({ userId, password, automatic: includePassword });
   try {
     await navigator.clipboard.writeText(url);
@@ -677,6 +690,13 @@ async function copyStreamUrl({ root = null, includePassword = false } = {}) {
     input.remove();
   }
   ui.notifications.info(includePassword ? "Automatic-login browser source copied." : localize("TSV.Notifications.UrlCopied"));
+}
+
+async function persistStreamPassword(value) {
+  const password = String(value ?? "");
+  if (setting("streamPassword") === password) return password;
+  await game.settings.set(MODULE_ID, "streamPassword", password);
+  return password;
 }
 
 function encodeSourceCredential(password) {
