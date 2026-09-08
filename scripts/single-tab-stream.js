@@ -73,10 +73,27 @@ Hooks.once('ready',()=>{
   button.style.cssText='position:fixed;bottom:8px;right:330px;z-index:10000;width:auto;padding:6px 12px';
   button.addEventListener('click',async()=>{
     if(active){stopSingleTabStream();button.textContent='Connect Meld';return;}
-    const url=window.prompt('Paste the pairing URL printed by the Tactical Stream local helper:');
-    if(!url)return;
-    try{await startSingleTabStream(url);button.textContent='Stop Meld feed';}
-    catch(e){ui.notifications.error(e.message);}
+    const existing=document.getElementById('tactical-stream-pairing');
+    if(existing){existing.querySelector('input').focus();return;}
+    const panel=document.createElement('section');
+    panel.id='tactical-stream-pairing';
+    panel.setAttribute('role','dialog');
+    panel.setAttribute('aria-label','Connect Meld');
+    panel.style.cssText='position:fixed;bottom:52px;right:16px;z-index:10001;width:min(480px,calc(100vw - 32px));padding:20px;background:#101923;color:#edf5ff;border:1px solid #2f9dff;border-radius:8px;box-shadow:0 8px 32px #000';
+    panel.innerHTML='<form><h2>Connect Meld</h2><label for="tactical-pairing-url">Local helper URL (same as Meld)</label><input id="tactical-pairing-url" type="text" required autocomplete="off" placeholder="http://127.0.0.1:43119/#…" style="width:100%;margin:12px 0;color:#fff;background:#07111b"><p>This shares your current canvas, including GM-visible information. Test off-stream.</p><p role="status" aria-live="polite"></p><div style="display:flex;gap:8px"><button type="submit">Connect</button><button type="button">Cancel</button></div></form>';
+    const form=panel.querySelector('form'), input=panel.querySelector('input');
+    const submit=panel.querySelector('[type="submit"]'), status=panel.querySelector('[role="status"]');
+    panel.querySelector('[type="button"]').addEventListener('click',()=>{panel.remove();button.focus();});
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();submit.disabled=true;status.textContent='Connecting to the local helper…';
+      try{
+        await startSingleTabStream(input.value.trim());
+        if(active){button.textContent='Stop Meld feed';panel.remove();button.focus();}
+        else status.textContent='Connection stopped. Check the helper and try again.';
+      }catch(e){status.textContent=e.message;}
+      finally{submit.disabled=false;}
+    });
+    document.body.append(panel);input.focus();
   });
   document.body.append(button);
 });
