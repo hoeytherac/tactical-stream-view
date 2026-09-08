@@ -1,3 +1,4 @@
+import { createComposition } from './stream-composition.js';
 let active;
 
 export async function startSingleTabStream(sourceUrl) {
@@ -29,14 +30,6 @@ export async function startSingleTabStream(sourceUrl) {
     await peer.setLocalDescription(await peer.createOffer());
     if (active === session && session.peer === peer) await send({type:'offer',id,description:peer.localDescription});
   }
-  function draw() {
-    if(active !== session) return;
-    ctx.fillStyle='#030811';ctx.fillRect(0,0,1080,1080);
-    // Draw only the WebGL canvas bitmap, never desktop UI or character sheets.
-    const scale=Math.min(1080/board.width,1080/board.height);
-    ctx.drawImage(board,(1080-board.width*scale)/2,(1080-board.height*scale)/2,board.width*scale,board.height*scale);
-    session.frame=requestAnimationFrame(draw);
-  }
   async function poll() {
     if(active !== session)return;
     try {
@@ -56,12 +49,13 @@ export async function startSingleTabStream(sourceUrl) {
       if (active === session) session.timer=setTimeout(poll,500);
     } catch(e) { if (active === session) { stopSingleTabStream();ui.notifications.error(`Tactical stream stopped: ${e.message}`); } }
   }
-  try { draw();await offer();poll(); } catch(e) {if(active === session) stopSingleTabStream();throw e;}
+  try { session.disposeComposition=createComposition(output);await offer();poll(); } catch(e) {if(active === session) stopSingleTabStream();throw e;}
 }
 
 export function stopSingleTabStream() {
   if(!active)return;
   const s=active;active=null;clearTimeout(s.timer);cancelAnimationFrame(s.frame);
+  s.disposeComposition?.();
   s.peer?.close();s.stream.getTracks().forEach(t=>t.stop());
   const button = document.getElementById('tactical-stream-connect');
   if (button) button.textContent = 'Connect Meld';
@@ -99,4 +93,20 @@ Hooks.once('ready',()=>{
     document.body.append(panel);input.focus();
   });
   document.body.append(button);
+  const twitchButton=document.createElement('button');
+  twitchButton.type='button';twitchButton.textContent='Twitch · Coalsan';
+  twitchButton.style.cssText='position:fixed;bottom:8px;right:475px;z-index:10000;width:auto;padding:6px 12px';
+  twitchButton.addEventListener('click',()=>{
+    const existing=document.getElementById('tactical-twitch-chat');
+    if(existing){existing.remove();return;}
+    const panel=document.createElement('section');panel.id='tactical-twitch-chat';
+    panel.style.cssText='position:fixed;right:16px;top:80px;width:350px;height:550px;max-width:90vw;max-height:80vh;resize:both;overflow:hidden;z-index:10002;background:#101923;color:white;border:1px solid #857042;display:flex;flex-direction:column';
+    const close=document.createElement('button');close.type='button';close.textContent='Close Twitch · Coalsan';
+    close.addEventListener('click',()=>panel.remove());
+    const frame=document.createElement('iframe');frame.title='Coalsan Twitch chat';
+    frame.src=`https://www.twitch.tv/embed/coalsan/chat?parent=${encodeURIComponent(location.hostname)}`;
+    frame.style.cssText='width:100%;flex:1;border:0;min-height:0';
+    panel.append(close,frame);document.body.append(panel);
+  });
+  document.body.append(twitchButton);
 });
