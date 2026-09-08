@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Tactical View Receiver</title>
+<style>html,body{margin:0;width:100%;height:100%;background:#030811;color:#b8dfff;font:20px Georgia}video{width:100%;height:100%;object-fit:contain}p{position:absolute;inset:40% 8%;text-align:center}video:not([src]){background:transparent}</style>
+<video autoplay muted playsinline></video><p id="status">Waiting for your Foundry play tab…</p>
+<script>
+const token=location.hash.slice(1), video=document.querySelector('video'), label=document.querySelector('p');
+let peer, pending=[];
+const endpoint='/signal?role=receiver&token='+encodeURIComponent(token);
+async function send(message){const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(message)});if(!r.ok)throw Error('Pairing failed');}
+async function handle(m){
+ if(m.type==='offer'){
+  peer?.close();pending=[];peer=new RTCPeerConnection({iceServers:[]});
+  peer.onicecandidate=e=>{if(e.candidate)send({type:'ice',candidate:e.candidate}).catch(console.error)};
+  peer.ontrack=e=>{video.srcObject=e.streams[0];label.hidden=true;video.play().catch(console.error)};
+  peer.onconnectionstatechange=()=>{if(['failed','disconnected','closed'].includes(peer.connectionState)){label.hidden=false;label.textContent='Connection lost. Restart sharing in Foundry.'}};
+  await peer.setRemoteDescription(m.description);await peer.setLocalDescription(await peer.createAnswer());await send({type:'answer',description:peer.localDescription});
+ } else if(m.type==='ice'&&peer) await peer.addIceCandidate(m.candidate);
+}
+async function poll(){try{const r=await fetch(endpoint);if(!r.ok)throw Error('Pairing expired. Copy the helper’s current URL.');for(const m of await r.json())await handle(m)}catch(e){label.hidden=false;label.textContent=e.message}setTimeout(poll,500)}
+send({type:'ready'}).then(poll).catch(e=>label.textContent=e.message);
+</script>
