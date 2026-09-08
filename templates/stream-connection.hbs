@@ -4,7 +4,7 @@
     <div>
       <p class="tsv-config-kicker">PERMANENT BROWSER SOURCE</p>
       <h2>Tactical Stream View</h2>
-      <p>Choose the low-permission Foundry user and password that Meld will use. The permanent source can then sign itself in.</p>
+      <p>Keep your normal game screen. Meld runs a separate, clean view inside one resizable Browser layer.</p>
     </div>
   </header>
 
@@ -20,27 +20,18 @@
       <p class="hint">Create a Player-level user named “Stream” in Foundry first. Give it Observer access to the actors whose vision should appear on stream.</p>
     </div>
 
-    <div class="form-group">
-      <label for="tsv-stream-password">Stream password</label>
-      <input id="tsv-stream-password" type="password" name="streamPassword" value="{{streamPassword}}" autocomplete="off" spellcheck="false">
-      <p class="hint">Saved automatically in this GM browser when changed, closed, or copied. It is never written to the shared world or uploaded to GitHub.</p>
-    </div>
-
     <div class="tsv-security-note">
       <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-      <p><strong>Automatic sign-in:</strong> the copied automatic URL places this password in its private <code>#fragment</code>. Foundry receives it only when the source signs in. Anyone who can read your Meld browser-source URL can also recover it, so use a dedicated Player-level Stream account.</p>
+      <p><strong>Connect inside Meld:</strong> add a Browser layer, paste the URL, and use the mouse-pointer interaction button to sign in as Stream. The clean layout opens after login. Sign in again if Foundry expires the session. No separate desktop window is needed.</p>
     </div>
 
     <div class="form-group">
       <label for="tsv-source-url">Meld browser-source URL</label>
       <div class="tsv-copy-row">
         <input id="tsv-source-url" type="text" value="{{sourceUrl}}" readonly spellcheck="false">
-        <button type="button" data-action="copy-url"><i class="fa-regular fa-copy"></i> Copy safe URL</button>
+        <button type="button" data-action="copy-url"><i class="fa-regular fa-copy"></i> Copy Meld URL</button>
       </div>
-      <div class="tsv-auto-source-row">
-        <button type="button" data-action="copy-auto-url"><i class="fa-solid fa-key"></i> Copy automatic-login URL</button>
-      </div>
-      <p class="hint">Use the automatic URL in a 1080 × 1080 browser layer. The safe URL asks for the Stream password once inside Meld.</p>
+      <p class="hint">Start at 1080 × 1080 and lock the browser size in Meld, then scale the layer into your tactical-view slot. Turn interaction off to move or resize the layer. Save settings, then enable Push Stream Mode in Foundry.</p>
     </div>
 
     <div class="tsv-viewer-state {{#if viewerConnected}}is-connected{{else}}is-offline{{/if}}" data-viewer-state>
