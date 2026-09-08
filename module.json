@@ -2,7 +2,7 @@
   "id": "tactical-stream-view",
   "title": "Tactical Stream View — Living Journal Edition",
   "description": "A square, broadcast-ready Foundry view with a tactical canvas, a dedicated Dice So Nice stage, and translucent Living Journal-style chat cards. Includes a permanent browser-source workflow and GM camera direction tools.",
-  "version": "1.0.3",
+  "version": "1.1.0-alpha.1",
   "authors": [
     {
       "name": "HoeyTherac",
@@ -14,6 +14,7 @@
     "verified": "14"
   },
   "esmodules": [
+    "scripts/single-tab-stream.js",
     "scripts/tactical-stream-view.js"
   ],
   "styles": [
@@ -29,7 +30,7 @@
   "socket": true,
   "url": "https://github.com/hoeytherac/tactical-stream-view",
   "manifest": "https://github.com/hoeytherac/tactical-stream-view/releases/latest/download/module.json",
-  "download": "https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.0.3/tactical-stream-view-v1.0.3.zip",
+  "download": "https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.1.0-alpha.1/tactical-stream-view-v1.1.0-alpha.1.zip",
   "bugs": "https://github.com/hoeytherac/tactical-stream-view/issues",
   "changelog": "https://github.com/hoeytherac/tactical-stream-view/blob/main/CHANGELOG.md",
   "license": "https://github.com/hoeytherac/tactical-stream-view/blob/main/LICENSE",
