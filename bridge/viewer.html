@@ -5,17 +5,30 @@
 <video autoplay muted playsinline></video><p id="status">Waiting for your Foundry play tab…</p>
 <script>
 const token=location.hash.slice(1), video=document.querySelector('video'), label=document.querySelector('p');
-let peer, pending=[];
+let peer, negotiationId;
+const pending = new Map();
 const endpoint='/signal?role=receiver&token='+encodeURIComponent(token);
 async function send(message){const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(message)});if(!r.ok)throw Error('Pairing failed');}
 async function handle(m){
  if(m.type==='offer'){
-  peer?.close();pending=[];peer=new RTCPeerConnection({iceServers:[]});
-  peer.onicecandidate=e=>{if(e.candidate)send({type:'ice',candidate:e.candidate}).catch(console.error)};
+  peer?.close();negotiationId=m.id;peer=new RTCPeerConnection({iceServers:[]});
+  const current=peer, id=m.id;
+  peer.onicecandidate=e=>{if(e.candidate && peer===current)send({type:'ice',id,candidate:e.candidate}).catch(console.error)};
   peer.ontrack=e=>{video.srcObject=e.streams[0];label.hidden=true;video.play().catch(console.error)};
   peer.onconnectionstatechange=()=>{if(['failed','disconnected','closed'].includes(peer.connectionState)){label.hidden=false;label.textContent='Connection lost. Restart sharing in Foundry.'}};
-  await peer.setRemoteDescription(m.description);await peer.setLocalDescription(await peer.createAnswer());await send({type:'answer',description:peer.localDescription});
- } else if(m.type==='ice'&&peer) await peer.addIceCandidate(m.candidate);
+  await peer.setRemoteDescription(m.description);
+  for(const candidate of pending.get(id)||[]) await peer.addIceCandidate(candidate);
+  pending.clear();
+  await peer.setLocalDescription(await peer.createAnswer());await send({type:'answer',id,description:peer.localDescription});
+ } else if(m.type==='ice') {
+  if(peer && m.id===negotiationId && peer.remoteDescription) await peer.addIceCandidate(m.candidate);
+  else {
+   if(!pending.has(m.id)) pending.set(m.id,[]);
+   const candidates=pending.get(m.id);
+   if(candidates.length<64)candidates.push(m.candidate);
+   if(pending.size>8)pending.delete(pending.keys().next().value);
+  }
+ }
 }
 async function poll(){try{const r=await fetch(endpoint);if(!r.ok)throw Error('Pairing expired. Copy the helper’s current URL.');for(const m of await r.json())await handle(m)}catch(e){label.hidden=false;label.textContent=e.message}setTimeout(poll,500)}
 send({type:'ready'}).then(poll).catch(e=>label.textContent=e.message);
