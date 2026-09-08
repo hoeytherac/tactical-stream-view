@@ -29,7 +29,7 @@ class StreamConnectionConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     window: {
       title: "Tactical Stream View · Stream Connection",
       icon: "fa-solid fa-tower-broadcast",
-      resizable: false
+      resizable: true
     },
     form: {
       closeOnSubmit: false,
@@ -572,8 +572,8 @@ function prepareDiceStage() {
   const diceCanvas = document.getElementById("dice-box-canvas");
   state.shell?.classList.toggle("has-dice-so-nice", Boolean(diceCanvas));
   if (!diceCanvas) return;
+  if (diceCanvas.classList.contains("tsv-captured-dice-canvas")) return;
   diceCanvas.classList.add("tsv-captured-dice-canvas");
-  window.dispatchEvent(new Event("resize"));
 }
 
 function observeDiceCanvas() {
@@ -647,16 +647,9 @@ function shouldUseStreamLayout() {
 
 function buildStreamUrl({ userId = setting("streamUserId"), password = "", automatic = false } = {}) {
   const gameRoute = new URL(foundry.utils.getRoute("game"), window.location.origin);
-  gameRoute.pathname = gameRoute.pathname.replace(/\/game\/?$/, `/modules/${MODULE_ID}/stream.html`);
   gameRoute.search = "";
   gameRoute.hash = "";
-  if (userId) {
-    gameRoute.searchParams.set("user", userId);
-    const userName = game.users.get(userId)?.name;
-    if (userName) gameRoute.searchParams.set("name", userName);
-  }
-  gameRoute.searchParams.set("v", game.modules.get(MODULE_ID)?.version ?? "1");
-  if (automatic && password) gameRoute.hash = `login=${encodeSourceCredential(password)}`;
+  gameRoute.searchParams.set(STREAM_QUERY_KEY, "1");
   const url = gameRoute;
   return url.toString();
 }
@@ -670,6 +663,9 @@ async function copyStreamUrl({ root = null, includePassword = false } = {}) {
     root?.querySelector("[name='streamUserId']")?.focus();
     return;
   }
+  // Save the selection before copying: login redirects may discard the query.
+  // The dedicated user's identity activates the layout after the normal join page.
+  if (setting("streamUserId") !== userId) await game.settings.set(MODULE_ID, "streamUserId", userId);
   if (includePassword && !password) {
     ui.notifications.warn("Enter the Stream password before copying the automatic source URL.");
     passwordField?.focus();
