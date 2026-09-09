@@ -1,26 +1,44 @@
 import { TwitchTransport, escapeChat, outgoingText } from './twitch-transport.js';
+import { summarizeRoll } from './roll-relay.js';
 const ID = 'tactical-stream-view';
+const DEFAULT_CLIENT_ID = 'lhgo8hw84mx54kzn3b4f2895vjevga';
 let bridge, authorization;
 const handled = new Set();
+let sendChain = Promise.resolve();
+let lastSend = 0;
+function enqueueSend(current, getSummary) {
+  const expires = Date.now() + 60000;
+  const result = sendChain.then(async () => {
+    await new Promise(resolve => setTimeout(resolve, Math.max(0, 1700 - (Date.now() - lastSend))));
+    if (Date.now() > expires || bridge !== current || !current?.ready || !isRelay()) throw Error('Twitch disconnected or queued message expired.');
+    const summary = getSummary(); // Recheck privacy immediately before transmission.
+    if (!summary) return;
+    lastSend = Date.now();
+    await current.send(summary.name, summary.text);
+  });
+  sendChain = result.catch(() => {});
+  return result;
+}
 const chatClass = () => CONFIG.ChatMessage.documentClass;
 const relay = () => game.settings.get(ID, 'twitchRelayUser');
 const isRelay = () => game.user.isGM && relay() === game.user.id;
 
 Hooks.once('init', () => {
   game.settings.register(ID, 'twitchRelayUser', {scope:'world',config:false,type:String,default:''});
-  game.settings.register(ID, 'twitchClientId', {scope:'client',config:false,type:String,default:''});
+  game.settings.register(ID, 'twitchClientId', {scope:'client',config:false,type:String,default:DEFAULT_CLIENT_ID});
 });
 
 function addControls() {
   const chat = document.querySelector('#chat');
   if (!chat || chat.querySelector('.tsv-twitch-controls')) return;
   const controls = document.createElement('div'); controls.className = 'tsv-twitch-controls';
-  controls.style.cssText = 'padding:6px;border-top:1px solid #806642;font-size:12px';
-  const hint = document.createElement('span'); hint.textContent = 'Twitch · Coalsan — /t message sends publicly';
+  controls.style.cssText = 'padding:6px;border-top:1px solid #806642;font-size:12px;pointer-events:auto;position:relative;flex-shrink:0';
+  const hint = document.createElement('span'); hint.textContent = 'Twitch · Public rolls auto-share while connected · /t to talk';
   controls.append(hint);
   if (game.user.isGM) {
     const button = document.createElement('button'); button.type = 'button'; button.textContent = 'Connect / Disconnect Twitch';
-    button.addEventListener('click', configure); controls.append(button);
+    button.style.cssText = 'pointer-events:auto;position:relative;min-height:32px;width:100%';
+    button.addEventListener('click', event => {event.preventDefault();event.stopPropagation();configure();}); controls.append(button);
   }
   (chat.querySelector('.chat-controls') || chat).append(controls);
 }
@@ -48,7 +66,20 @@ export function eligibleOutgoing(message, creatorId) {
     && !message.blind && !message.whisper?.length && message.author?.id === creatorId;
 }
 Hooks.on('createChatMessage', (message, _options, creatorId) => {
-  if (!isRelay() || !eligibleOutgoing(message, creatorId) || handled.has(message.id)) return;
+  if (!isRelay() || !bridge?.ready || handled.has(message.id)) return;
+  if (!eligibleOutgoing(message, creatorId)) {
+    const options = () => ({challengeVisibility: game.system.id === 'dnd5e' ? game.settings.get('dnd5e', 'challengeVisibility') : 'none'});
+    try {
+      if (!summarizeRoll(message, options())) return;
+      handled.add(message.id);
+      if (handled.size > 2000) handled.delete(handled.values().next().value);
+      void enqueueSend(bridge, () => {
+        const live = game.messages.get(message.id);
+        return live ? summarizeRoll(live, options()) : null;
+      }).catch(() => ui.notifications.warn('A public roll could not be sent to Twitch. It was not retried.'));
+    } catch { ui.notifications.warn('Unsupported roll card skipped by Twitch relay.'); }
+    return;
+  }
   handled.add(message.id);
   if (handled.size > 2000) handled.delete(handled.values().next().value);
   void relayOutgoing(message);
@@ -57,7 +88,7 @@ async function relayOutgoing(message) {
   let status = 'sent';
   try {
     if (!bridge?.ready) throw Error('Twitch is not connected.');
-    await bridge.send(message.author.name, message.flags[ID].twitch.text);
+    await enqueueSend(bridge, () => eligibleOutgoing(message, message.author.id) ? {name:message.author.name,text:message.flags[ID].twitch.text} : null);
   } catch { status = 'failed — reconnect Twitch or wait, then send a new /t message'; }
   await message.update({[`flags.${ID}.twitch.status`]:status}).catch(() => ui.notifications.warn('Could not update Twitch delivery status.'));
 }
@@ -81,10 +112,11 @@ function configure() {
   if (document.getElementById('tsv-twitch-authorize')) return;
   const panel = document.createElement('section'); panel.id = 'tsv-twitch-authorize';
   panel.setAttribute('role','dialog'); panel.setAttribute('aria-label','Connect Twitch chat');
-  panel.style.cssText='position:fixed;right:20px;top:100px;z-index:10010;background:#101923;color:white;border:1px solid #857042;padding:20px;width:min(450px,90vw)';
+  panel.style.cssText='position:fixed;right:20px;top:100px;z-index:10010;background:#101923;color:white;border:1px solid #857042;padding:20px;width:min(450px,90vw);pointer-events:auto;max-height:80vh;overflow:auto';
   panel.innerHTML='<form><h2>Connect Coalsan to Foundry chat</h2><p>Viewers will appear in the shared chat log. Every player can use /t to reply publicly as Coalsan, prefixed with their Foundry name. Regular chat and private rolls are not sent.</p><label for="tsv-twitch-client">Public Twitch application Client ID</label><input id="tsv-twitch-client" required autocomplete="off" type="text"><p>Use a registered public Twitch app. No client secret is needed. Authorization lasts for this browser session; reconnect after token expiry.</p><p role="status" aria-live="polite"></p><a href="https://www.twitch.tv/activate" target="_blank" rel="noopener noreferrer">Open Twitch activation</a><button type="submit">Get authorization code</button><button type="button">Cancel</button></form>';
+  panel.querySelector('p').textContent = 'While connected, new public rolls and item/spell/feature usage summaries automatically go to Twitch. Whispers and blind rolls are excluded. Hidden DCs are omitted. Players use /t to talk as Coalsan with their name prefixed. Regular chat is not sent.';
   const input=panel.querySelector('input'), status=panel.querySelector('[role="status"]'), submitButton=panel.querySelector('[type="submit"]');
-  input.value=game.settings.get(ID,'twitchClientId');
+  input.value=game.settings.get(ID,'twitchClientId') || DEFAULT_CLIENT_ID;
   panel.querySelector('[type="button"]').addEventListener('click',()=>{
     if(!bridge?.ready){authorization?.abort();authorization=null;bridge?.stop();bridge=null;}
     panel.remove();
