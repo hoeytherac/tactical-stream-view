@@ -1,8 +1,10 @@
 # Tactical Stream View — Twitch Chat
 
-## Current build: 1.1.0-alpha.4
+## Current build: 1.1.0-alpha.5
 
-Install [this exact manifest](https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.1.0-alpha.4/module.json), then reload Foundry. Video streaming and its controls are disabled. Use ordinary Meld screen capture; the helper is no longer needed.
+Alpha 5 fixes the browser `fetch` receiver binding that caused **Illegal invocation** when requesting Twitch authorization. Nine mocked tests pass; live authorization still requires verification.
+
+Install [this exact manifest](https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.1.0-alpha.5/module.json), then reload Foundry. Video streaming and its controls are disabled. Use ordinary Meld screen capture; the helper is no longer needed.
 
 A GM uses **Connect / Disconnect Twitch** in Foundry chat. Coalsan's public Client ID is prefilled. Follow the device authorization prompt. Players do not need Twitch logins: `/t hello` sends their name-prefixed message through Coalsan. Incoming Twitch chat appears in Foundry.
 
