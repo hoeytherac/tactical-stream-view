@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 test('Connect Meld opens an inline form, rejects invalid URL, and closes on Cancel', async () => {
-  const source = readFileSync(new URL('../scripts/single-tab-stream.js', import.meta.url), 'utf8').replace(/export /g, '');
+  const source = readFileSync(new URL('../scripts/single-tab-stream.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, '').replace(/export /g, '');
   const elements = [];
   class Element {
     style = {}; handlers = {}; children = {}; value = '';
@@ -77,7 +77,7 @@ test('receiver queues ICE before offer and includes negotiation id in answer', a
 });
 
 test('sender buffers ICE until answer and ignores old negotiation messages', async () => {
-  const source = readFileSync(new URL('../scripts/single-tab-stream.js', import.meta.url), 'utf8').replace(/export /g, '');
+  const source = readFileSync(new URL('../scripts/single-tab-stream.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, '').replace(/export /g, '');
   const sent = [], peers = [], timers = [];
   let inbox = [];
   class Canvas {
@@ -94,7 +94,7 @@ test('sender buffers ICE until answer and ignores old negotiation messages', asy
     async addIceCandidate(c) { assert.ok(this.remoteDescription); this.candidates.push(c); }
   }
   const context = vm.createContext({
-    URL, AbortSignal, HTMLCanvasElement: Canvas, RTCPeerConnection: Peer,
+    URL, AbortSignal, createComposition: () => () => {}, HTMLCanvasElement: Canvas, RTCPeerConnection: Peer,
     crypto: { randomUUID: () => 'current' }, console,
     document: { querySelector: () => new Canvas(), createElement: () => new Canvas(), getElementById: () => null },
     Hooks: { once() {} }, ui: { notifications: { error: assert.fail } },
