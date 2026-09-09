@@ -9,7 +9,7 @@ export function outgoingText(name, text) {
 
 // Tokens exist only in this browser's memory, never in world settings or messages.
 export class TwitchTransport {
-  constructor({ onMessage, onStatus, fetcher = fetch, Socket = WebSocket }) {
+  constructor({ onMessage, onStatus, fetcher = globalThis.fetch.bind(globalThis), Socket = WebSocket }) {
     Object.assign(this, { onMessage, onStatus, fetcher, Socket });
     this.sockets = new Set(); this.seen = new Set(); this.stopped = false;
   }
