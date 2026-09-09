@@ -1,5 +1,19 @@
 # Tactical Stream View — Living Journal Edition
 
+## Current development build: 1.1.0-alpha.3
+
+**Experimental; live Foundry/Meld/Twitch verification is still required.** Install the [alpha manifest](https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.1.0-alpha.3/module.json), not the stable `latest` link below. Reload Foundry after installation.
+
+This build uses your existing Foundry tab. Run `node bridge/server.mjs` on the streaming computer; put its printed local URL in Meld and in **Connect Meld** at the bottom of Foundry. Keep that helper running and open the receiver only in Meld. The URL changes when the helper restarts. The legacy Stream Connection panel and `/game?tacticalStream=1` URL are not used by the alpha.
+
+The new composition copies the board after rendering, includes a lower Dice So Nice area and five public text-based journal-style cards. It shares the current user's canvas/dice visibility, including GM secrets or private dice the GM can see. Test off-stream. Exact system HTML cards, spectator vision and permanent pairing are not finished.
+
+For two-way Coalsan Twitch chat, one GM uses **Connect / Disconnect Twitch** in Foundry's existing chat controls. A registered public Twitch app Client ID and broadcaster authorization are required. Players use `/t Hello viewers` to reply through Coalsan with their Foundry names. Ordinary game chat is not forwarded. Tokens stay in the GM browser's memory. See [setup and limitations](bridge/README.md). No embedded Twitch panel is used.
+
+Seven automated tests pass; this is not an end-to-end certification. Viewer dice commands, moderation/deletion synchronization, automatic token refresh and reconnect remain pending.
+
+## Legacy 1.0.x documentation (not the alpha workflow)
+
 Tactical Stream View turns a dedicated Foundry user into a permanent square browser source for Meld Studio, OBS, or another streaming app.
 
 The broadcast layout contains only:
