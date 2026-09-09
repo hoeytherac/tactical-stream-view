@@ -1,4 +1,18 @@
-# Tactical Stream View — Living Journal Edition
+# Tactical Stream View — Twitch Chat
+
+## Current build: 1.1.0-alpha.4
+
+Install [this exact manifest](https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.1.0-alpha.4/module.json), then reload Foundry. Video streaming and its controls are disabled. Use ordinary Meld screen capture; the helper is no longer needed.
+
+A GM uses **Connect / Disconnect Twitch** in Foundry chat. Coalsan's public Client ID is prefilled. Follow the device authorization prompt. Players do not need Twitch logins: `/t hello` sends their name-prefixed message through Coalsan. Incoming Twitch chat appears in Foundry.
+
+While connected, new public rolls and D&D 5e usage cards automatically send plain-text summaries. Spell/item/feature names, attack/damage/save totals and formulas are supported. Save DCs respect D&D 5e challenge visibility rather than the GM's privileged view. Whispers, blind/self rolls, private originating cards, unidentified item names, and relay echoes are excluded. No GM card HTML or descriptions are scraped.
+
+Messages are paced and checked again before sending. Queued messages expire after one minute; disconnected sessions are not replayed. Only newly created cards are relayed: third-party modules that update an existing card instead of creating rolls are not yet supported. Unrecognized third-party privacy mechanisms need live validation; test off-stream before using sensitive game data. Twitch moderation/deletion synchronization and automatic token refresh are not implemented.
+
+Eight Twitch/formatter tests pass. Live Foundry interaction and Twitch delivery still need verification. Historical streaming files below remain in the repository for reference but are not loaded by this manifest.
+
+## Archived alpha 3 instructions (not used by alpha 4)
 
 ## Current development build: 1.1.0-alpha.3
 
