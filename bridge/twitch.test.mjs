@@ -7,6 +7,15 @@ function runtime(extra={}) {
   const context=vm.createContext({URL,URLSearchParams,AbortSignal,setTimeout,clearTimeout,setInterval,clearInterval,fetch,WebSocket:class {},...extra});
   vm.runInContext(transportCode,context);return context;
 }
+test('native fetch keeps its browser receiver during authorization',async()=>{
+  const context=runtime();
+  vm.runInContext(`globalThis.fetch = function () {
+    if (this !== globalThis) throw Error('Illegal invocation');
+    return Promise.resolve({ok:true,json:async()=>({user_code:'TEST',expires_in:600})});
+  };`,context);
+  const client=vm.runInContext('new TwitchTransport({onMessage(){},onStatus(){}})',context);
+  assert.equal((await client.request('https://id.twitch.tv/oauth2/device')).user_code,'TEST');
+});
 test('Twitch output is explicit plain text with author prefix and length limit',()=>{
   const context=runtime();
   assert.equal(vm.runInContext("outgoingText('Frank','Hello viewers')",context),'[Frank] Hello viewers');
