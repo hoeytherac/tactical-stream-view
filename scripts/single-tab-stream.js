@@ -93,20 +93,4 @@ Hooks.once('ready',()=>{
     document.body.append(panel);input.focus();
   });
   document.body.append(button);
-  const twitchButton=document.createElement('button');
-  twitchButton.type='button';twitchButton.textContent='Twitch · Coalsan';
-  twitchButton.style.cssText='position:fixed;bottom:8px;right:475px;z-index:10000;width:auto;padding:6px 12px';
-  twitchButton.addEventListener('click',()=>{
-    const existing=document.getElementById('tactical-twitch-chat');
-    if(existing){existing.remove();return;}
-    const panel=document.createElement('section');panel.id='tactical-twitch-chat';
-    panel.style.cssText='position:fixed;right:16px;top:80px;width:350px;height:550px;max-width:90vw;max-height:80vh;resize:both;overflow:hidden;z-index:10002;background:#101923;color:white;border:1px solid #857042;display:flex;flex-direction:column';
-    const close=document.createElement('button');close.type='button';close.textContent='Close Twitch · Coalsan';
-    close.addEventListener('click',()=>panel.remove());
-    const frame=document.createElement('iframe');frame.title='Coalsan Twitch chat';
-    frame.src=`https://www.twitch.tv/embed/coalsan/chat?parent=${encodeURIComponent(location.hostname)}`;
-    frame.style.cssText='width:100%;flex:1;border:0;min-height:0';
-    panel.append(close,frame);document.body.append(panel);
-  });
-  document.body.append(twitchButton);
 });
