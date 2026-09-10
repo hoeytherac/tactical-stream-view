@@ -48,10 +48,10 @@ export class TwitchTransport {
     throw Error('Twitch authorization cancelled or expired.');
   }
   async validate() {
-    const data = await this.request('https://api.twitch.tv/helix/streams', {headers:{Authorization:`Bearer ${this.token}`, 'Client-Id':this.clientId}});
-    if (!data.data || !SCOPES.split(' ').every(scope => data.scopes?.includes(scope))) throw Error('Twitch authorization is missing chat permissions.');
-    this.userId = data.data[0]?.owner_id;
-    this.username = data.data[0]?.owner_name;
+    const data = await this.request('https://id.twitch.tv/oauth2/validate', {headers:{Authorization:`Bearer ${this.token}`}});
+    if (data.client_id !== this.clientId || !SCOPES.split(' ').every(scope => data.scopes?.includes(scope))) throw Error('Twitch authorization is missing chat permissions.');
+    this.userId = data.user_id;
+    this.username = data.login;
   }
   async api(path, body) {
     return this.request(`https://api.twitch.tv/helix/${path}`, {method:body ? 'POST' : 'GET', headers:{Authorization:`Bearer ${this.token}`, 'Client-Id':this.clientId, 'Content-Type':'application/json'}, ...(body ? {body:JSON.stringify(body)} : {})});
@@ -75,8 +75,8 @@ export class TwitchTransport {
         if (type === 'session_welcome') {
           keepalive = (message.payload.session.keepalive_timeout_seconds || 10) * 1000 + 5000;
           if (previous) { this.sockets.delete(previous); previous.close(); }
-          else await this.api('eventsub/subscriptions', {type:'channel.chat.message',version:'1',condition:{broadcaster_user_id:this.userId,user_id:this.userId},transport:{method:'websocket',session_id:message.payload.session.id}});
-          if (!this.stopped) { this.ready = true; this.onStatus('Connected to Coalsan'); }
+          else await this.api('eventsub/subscriptions', {type:'channel.chat.message',version:'1',condition:{broadcaster_user_id:this.userId},transport:{method:'websocket',session_id:message.payload.session.id}});
+          if (!this.stopped) { this.ready = true; this.onStatus('Connected to Twitch'); }
         } else if (type === 'session_reconnect') {
           this.openSocket(message.payload.session.reconnect_url, socket);
         } else if (type === 'revocation') this.fail('Twitch revoked the chat subscription. Reconnect.');
