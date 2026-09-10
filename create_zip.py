@@ -1,6 +1,6 @@
 import zipfile, os, shutil
 
-build_dir = '_build_v19'
+build_dir = '_build_v20'
 if os.path.exists(build_dir):
     shutil.rmtree(build_dir)
 module_dir = os.path.join(build_dir, 'tactical-stream-view')
@@ -17,7 +17,7 @@ for d in ['scripts', 'styles', 'languages', 'templates', 'bridge']:
         dst = os.path.join(module_dir, d)
         shutil.copytree(src, dst)
 
-with zipfile.ZipFile('tactical-stream-view-v1.1.0-alpha.19.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+with zipfile.ZipFile('tactical-stream-view-v1.1.0-alpha.20.zip', 'w', zipfile.ZIP_DEFLATED) as z:
     for root, dirs, files in os.walk(build_dir):
         for file in files:
             filepath = os.path.join(root, file)

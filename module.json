@@ -2,7 +2,7 @@
     "id": "tactical-stream-view",
     "title": "Tactical Stream View — Twitch Chat",
     "description": "Two-way Twitch chat in Foundry with automatic public roll summaries. Custom video streaming is disabled; use screen capture in Meld.",
-    "version": "1.1.0-alpha.19",
+    "version": "1.1.0-alpha.20",
     "authors": [
         {
             "name": "HoeyTherac",
@@ -26,8 +26,8 @@
     ],
     "socket": true,
     "url": "https://github.com/hoeytherac/tactical-stream-view",
-    "manifest": "https://raw.githubusercontent.com/hoeytherac/tactical-stream-view/main/module.json",
-    "download": "https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.1.0-alpha.19/tactical-stream-view-v1.1.0-alpha.19.zip",
+    "manifest": "https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.1.0-alpha.20/module.json",
+    "download": "https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.1.0-alpha.20/tactical-stream-view-v1.1.0-alpha.20.zip",
     "bugs": "https://github.com/hoeytherac/tactical-stream-view/issues",
     "changelog": "https://github.com/hoeytherac/tactical-stream-view/blob/main/CHANGELOG.md",
     "license": "https://github.com/hoeytherac/tactical-stream-view/blob/main/LICENSE",
