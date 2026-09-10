@@ -1,7 +1,7 @@
 import { TwitchTransport, escapeChat, outgoingText } from './twitch-transport.js';
 import { summarizeRoll, summaryDelta } from './roll-relay.js';
 const ID = 'tactical-stream-view';
-const DEFAULT_CLIENT_ID = '';
+const DEFAULT_CLIENT_ID = 'lhgo8hw84mx54kzn3b4f2895vjevga';
 let bridge, authorization;
 const handled = new Set();
 const cardStates = new Map();
@@ -21,7 +21,7 @@ function relayCard(message) {
       const live = game.messages.get(message.id);
       const current = live && summarizeRoll(live,rollOptions());
       // Do not send a stale snapshot after privacy or results change.
-      if (!current || !delta.text.split(' — ').every(p=>current.text.split(' — ').includes(p))) return null;
+      if (!current || !delta.text.split(' \u2014 ').every(p=>current.text.split(' \u2014 ').includes(p))) return null;
       return delta;
     }).catch(()=>ui.notifications.warn('A roll update could not be sent to Twitch.'));
   } catch { ui.notifications.warn('Unsupported roll update skipped by Twitch relay.'); }
@@ -53,7 +53,8 @@ const chatClass = () => CONFIG.ChatMessage.documentClass;
 const isRelay = () => game.user.isGM && !!bridge;
 
 Hooks.once('init', () => {
-  game.settings.register(ID, 'twitchClientId', {scope:'world',config:false,type:String,default:DEFAULT_CLIENT_ID});
+  game.settings.register(ID, 'twitchRelayUser', {scope:'world',config:false,type:String,default:''});
+  game.settings.register(ID, 'twitchClientId', {scope:'client',config:false,type:String,default:DEFAULT_CLIENT_ID});
 });
 
 function addControls() {
@@ -61,7 +62,7 @@ function addControls() {
   if (!chat || chat.querySelector('.tsv-twitch-controls')) return;
   const controls = document.createElement('div'); controls.className = 'tsv-twitch-controls';
   controls.style.cssText = 'padding:6px;border-top:1px solid #806642;font-size:12px;pointer-events:auto;position:relative;flex-shrink:0';
-  const hint = document.createElement('span'); hint.textContent = 'Twitch · Public rolls auto-share while connected · !t to talk';
+  const hint = document.createElement('span'); hint.textContent = 'Twitch \u00b7 Public rolls auto-share while connected \u00b7 !t to talk';
   controls.append(hint);
   // A separate explicit composer avoids Foundry rejecting unknown slash commands.
   const composer = document.createElement('div');
@@ -103,9 +104,9 @@ Hooks.on('chatMessage', (_log, message) => {
 async function submit(text) {
   try {
     outgoingText(game.user.name, text);
-    if (!game.user.isGM) throw Error('Only GMs can send Twitch messages.');
-    if (!bridge?.ready) throw Error('Twitch is not connected.');
-    await chatClass().create({content:`<p><strong>To Twitch · ${escapeChat(game.user.name)}</strong>: ${escapeChat(text)}</p>`,speaker:{alias:game.user.name},whisper:[],blind:false,flags:{[ID]:{twitch:{direction:'out',text,status:'pending'}}}});
+    const user = game.users.get(relay());
+    if (!user?.active || !user.isGM) throw Error('A GM must connect Twitch before !t can be used.');
+    await chatClass().create({content:`<p><strong>To Twitch \u00b7 ${escapeChat(game.user.name)}</strong>: ${escapeChat(text)}</p>`,speaker:{alias:game.user.name},whisper:[],blind:false,flags:{[ID]:{twitch:{direction:'out',text,status:'pending'}}}});
     return true;
   } catch (error) { ui.notifications.error(error.message); return false; }
 }
@@ -129,7 +130,7 @@ async function relayOutgoing(message) {
   try {
     if (!bridge?.ready) throw Error('Twitch is not connected.');
     await enqueueSend(bridge, () => eligibleOutgoing(message, message.author.id) ? {name:message.author.name,text:message.flags[ID].twitch.text} : null);
-  } catch { status = 'failed — reconnect Twitch or wait, then send a new !t message'; }
+  } catch { status = 'failed \u2014 reconnect Twitch or wait, then send a new !t message'; }
   await message.update({[`flags.${ID}.twitch.status`]:status}).catch(() => ui.notifications.warn('Could not update Twitch delivery status.'));
 }
 Hooks.on('renderChatMessageHTML', (message, html) => {
@@ -146,6 +147,7 @@ function configure() {
   if (!game.user.isGM) return;
   if (bridge || authorization) {
     authorization?.abort(); authorization = null; bridge?.stop(); bridge = null;
+    if (isRelay()) void game.settings.set(ID, 'twitchRelayUser', '');
     ui.notifications.info('Twitch disconnected.'); return;
   }
   if (document.getElementById('tsv-twitch-authorize')) return;
@@ -167,15 +169,17 @@ function configure() {
       onStatus: text => {status.textContent=text; if(!panel.isConnected) ui.notifications.info(text);},
       onMessage: async incoming => {
         if (!isRelay() || bridge !== current) return;
-        await chatClass().create({content:`<p><strong>Twitch · ${escapeChat(incoming.name)}</strong>: ${escapeChat(incoming.text)}</p>`,speaker:{alias:`Twitch · ${incoming.name}`},whisper:[],blind:false,flags:{[ID]:{twitch:{direction:'in',id:incoming.id}}}});
+        await chatClass().create({content:`<p><strong>Twitch \u00b7 ${escapeChat(incoming.name)}</strong>: ${escapeChat(incoming.text)}</p>`,speaker:{alias:`Twitch \u00b7 ${incoming.name}`},whisper:[],blind:false,flags:{[ID]:{twitch:{direction:'in',id:incoming.id}}}});
       }
     });
     try {
-      if (bridge?.ready) throw Error('Twitch is already connected. Disconnect first.');
+      const existing=game.users.get(relay());
+      if(existing?.active && existing.id!==game.user.id) throw Error('Another GM is already the Twitch relay. Disconnect that relay first.');
       await game.settings.set(ID,'twitchClientId',input.value.trim());
-      status.textContent='Requesting Twitch authorization…';
+      status.textContent='Requesting Twitch authorization\u2026';
       await current.authorize(input.value,code=>{status.textContent=`Enter ${code} on the Twitch activation page and authorize chat read/write.`;},controller.signal);
       if(controller.signal.aborted || bridge!==current)return;
+      await game.settings.set(ID,'twitchRelayUser',game.user.id);
       current.connect();authorization=null;
       panel.querySelector('[type="button"]').textContent='Close setup';
     } catch(error){current.stop();if(bridge===current)bridge=null;authorization=null;status.textContent=error.message;submitButton.disabled=false;}
