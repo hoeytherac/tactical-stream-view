@@ -1,6 +1,6 @@
 import zipfile, os, shutil
 
-build_dir = '_build_v17'
+build_dir = '_build_v18'
 if os.path.exists(build_dir):
     shutil.rmtree(build_dir)
 os.makedirs(build_dir, exist_ok=True)
@@ -17,7 +17,7 @@ for f in files_to_copy:
     if os.path.exists(f):
         shutil.copy(f, build_dir)
 
-with zipfile.ZipFile('tactical-stream-view-v1.1.0-alpha.17.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+with zipfile.ZipFile('tactical-stream-view-v1.1.0-alpha.18.zip', 'w', zipfile.ZIP_DEFLATED) as z:
     for root, dirs, files in os.walk(build_dir):
         for file in files:
             filepath = os.path.join(root, file)
