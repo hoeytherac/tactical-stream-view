@@ -2,7 +2,7 @@
     "id": "tactical-stream-view",
     "title": "Tactical Stream View \u2014 Twitch Chat",
     "description": "Two-way Twitch chat in Foundry with automatic public roll summaries. Custom video streaming is disabled; use screen capture in Meld.",
-    "version": "1.1.0-alpha.15",
+    "version": "1.1.0-alpha.16",
     "authors": [
         {
             "name": "HoeyTherac",

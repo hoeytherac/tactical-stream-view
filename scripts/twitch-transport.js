@@ -1,4 +1,4 @@
-const SCOPES = "chat:read chat:edit";
+const SCOPES = "user:read:chat user:write:chat";
 export const escapeChat = text => String(text).replace(/[&<>"'\[\]]/g, c => `&#${c.charCodeAt(0)};`);
 export function outgoingText(name, text) {
   const clean = value => String(value).replace(/[\r\n\x00-\x1f]/g, " ").trim();
@@ -52,9 +52,10 @@ export class TwitchTransport {
   }
   async validate() {
     const data = await this.request("https://id.twitch.tv/oauth2/validate", { headers: { "Authorization": "Bearer " + this.token } });
-    if (data.client_id !== this.clientId) throw Error("Twitch authorization is invalid. Reconnect.");
+    if (data.client_id !== this.clientId || !SCOPES.split(" ").every(scope => data.scopes?.includes(scope))) throw Error("Twitch authorization is missing chat permissions.");
     this.userId = data.user_id;
-    this.username = data.login;
+    // This first integration deliberately requires the broadcaster account.
+    if (data.login?.toLowerCase() !== "coalsan") throw Error("Authorize as Coalsan for this channel bridge.");
   }
   async api(path, body) {
     const url = `https://api.twitch.tv/helix/${path}`;
@@ -90,7 +91,7 @@ export class TwitchTransport {
           else await this.api("eventsub/subscriptions", {
             type: "channel.chat.message",
             version: "1",
-            condition: { broadcaster_user_id: this.userId },
+            condition: { broadcaster_user_id: this.userId, user_id: this.userId },
             transport: { method: "websocket", session_id: message.payload.session.id }
           });
           if (!this.stopped) { this.ready = true; this.onStatus("Connected to Twitch"); }

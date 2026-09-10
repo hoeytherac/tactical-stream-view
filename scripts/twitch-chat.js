@@ -51,7 +51,7 @@ function enqueueSend(current, getSummary) {
 }
 const chatClass = () => CONFIG.ChatMessage.documentClass;
 const relay = () => game.settings.get(ID, 'twitchRelayUser');
-const isRelay = () => game.user.isGM && !!bridge;
+const isRelay = () => game.user.isGM && relay() === game.user.id;
 
 Hooks.once('init', () => {
   game.settings.register(ID, 'twitchRelayUser', {scope:'world',config:false,type:String,default:''});
