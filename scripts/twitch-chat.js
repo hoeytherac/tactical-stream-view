@@ -1,39 +1,9 @@
 import { TwitchTransport, escapeChat, outgoingText } from './twitch-transport.js';
-import { summarizeRoll, summaryDelta } from './roll-relay.js';
+import { summarizeRoll } from './roll-relay.js';
 const ID = 'tactical-stream-view';
 const DEFAULT_CLIENT_ID = 'lhgo8hw84mx54kzn3b4f2895vjevga';
 let bridge, authorization;
 const handled = new Set();
-const cardStates = new Map();
-function rollOptions() {
-  return {challengeVisibility: game.system.id === 'dnd5e' ? game.settings.get('dnd5e','challengeVisibility') : 'none',
-    midi: game.modules.get('midi-qol')?.active ? (game.settings.get('midi-qol','ConfigSettings') ?? {}) : {gmAttackDisplay:'full',gmDamageDisplay:'full',autoCheckSaves:'all',highlightSuccess:true}};
-}
-function relayCard(message) {
-  try {
-    const next = summarizeRoll(message, rollOptions());
-    const previous = cardStates.get(message.id);
-    cardStates.set(message.id,next);
-    if(cardStates.size > 2000) cardStates.delete(cardStates.keys().next().value);
-    const delta = summaryDelta(previous,next);
-    if (!delta) return;
-    void enqueueSend(bridge,()=>{
-      const live = game.messages.get(message.id);
-      const current = live && summarizeRoll(live,rollOptions());
-      // Do not send a stale snapshot after privacy or results change.
-      if (!current || !delta.text.split(' \u2014 ').every(p=>current.text.split(' \u2014 ').includes(p))) return null;
-      return delta;
-    }).catch(()=>ui.notifications.warn('A roll update could not be sent to Twitch.'));
-  } catch { ui.notifications.warn('Unsupported roll update skipped by Twitch relay.'); }
-}
-Hooks.on('preUpdateChatMessage', message => {
-  if (!isRelay() || !bridge?.ready || cardStates.has(message.id)) return;
-  try {cardStates.set(message.id,summarizeRoll(message,rollOptions()));} catch {}
-});
-Hooks.on('updateChatMessage', message => {
-  if (isRelay() && bridge?.ready && cardStates.has(message.id)) relayCard(message);
-});
-Hooks.on('deleteChatMessage', message => cardStates.delete(message.id));
 let sendChain = Promise.resolve();
 let lastSend = 0;
 function enqueueSend(current, getSummary) {
@@ -119,7 +89,16 @@ export function eligibleOutgoing(message, creatorId) {
 Hooks.on('createChatMessage', (message, _options, creatorId) => {
   if (!isRelay() || !bridge?.ready || handled.has(message.id)) return;
   if (!eligibleOutgoing(message, creatorId)) {
-    relayCard(message);
+    try {
+      const options = {challengeVisibility: game.system.id === 'dnd5e' ? game.settings.get('dnd5e', 'challengeVisibility') : 'none'};
+      if (!summarizeRoll(message, options)) return;
+      handled.add(message.id);
+      if (handled.size > 2000) handled.delete(handled.values().next().value);
+      void enqueueSend(bridge, () => {
+        const live = game.messages.get(message.id);
+        return live ? summarizeRoll(live, options) : null;
+      }).catch(() => ui.notifications.warn('A public roll could not be sent to Twitch. It was not retried.'));
+    } catch { ui.notifications.warn('Unsupported roll card skipped by Twitch relay.'); }
     return;
   }
   handled.add(message.id);
