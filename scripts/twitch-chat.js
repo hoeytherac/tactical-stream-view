@@ -50,6 +50,7 @@ function enqueueSend(current, getSummary) {
   return result;
 }
 const chatClass = () => CONFIG.ChatMessage.documentClass;
+const relay = () => game.settings.get(ID, 'twitchRelayUser');
 const isRelay = () => game.user.isGM && !!bridge;
 
 Hooks.once('init', () => {
