@@ -1,35 +1,35 @@
 {
-  "id": "tactical-stream-view",
-  "title": "Tactical Stream View — Twitch Chat",
-  "description": "Two-way Twitch chat in Foundry with automatic public roll summaries. Custom video streaming is disabled; use screen capture in Meld.",
-  "version": "1.1.0-alpha.5",
-  "authors": [
-    {
-      "name": "HoeyTherac",
-      "url": "https://github.com/hoeytherac"
-    }
-  ],
-  "compatibility": {
-    "minimum": "13",
-    "verified": "14"
-  },
-  "esmodules": [
-    "scripts/twitch-chat.js"
-  ],
-  "styles": [],
-  "languages": [
-    {
-      "lang": "en",
-      "name": "English",
-      "path": "languages/en.json"
-    }
-  ],
-  "socket": true,
-  "url": "https://github.com/hoeytherac/tactical-stream-view",
-  "manifest": "https://github.com/hoeytherac/tactical-stream-view/releases/latest/download/module.json",
-  "download": "https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.1.0-alpha.5/tactical-stream-view-v1.1.0-alpha.5.zip",
-  "bugs": "https://github.com/hoeytherac/tactical-stream-view/issues",
-  "changelog": "https://github.com/hoeytherac/tactical-stream-view/blob/main/CHANGELOG.md",
-  "license": "https://github.com/hoeytherac/tactical-stream-view/blob/main/LICENSE",
-  "readme": "https://github.com/hoeytherac/tactical-stream-view/blob/main/README.md"
+    "id": "tactical-stream-view",
+    "title": "Tactical Stream View \u2014 Twitch Chat",
+    "description": "Two-way Twitch chat in Foundry with automatic public roll summaries. Custom video streaming is disabled; use screen capture in Meld.",
+    "version": "1.1.0-alpha.6",
+    "authors": [
+        {
+            "name": "HoeyTherac",
+            "url": "https://github.com/hoeytherac"
+        }
+    ],
+    "compatibility": {
+        "minimum": "13",
+        "verified": "14"
+    },
+    "esmodules": [
+        "scripts/twitch-chat.js"
+    ],
+    "styles": [],
+    "languages": [
+        {
+            "lang": "en",
+            "name": "English",
+            "path": "languages/en.json"
+        }
+    ],
+    "socket": true,
+    "url": "https://github.com/hoeytherac/tactical-stream-view",
+    "manifest": "https://github.com/hoeytherac/tactical-stream-view/releases/latest/download/module.json",
+    "download": "https://github.com/hoeytherac/tactical-stream-view/releases/download/v1.1.0-alpha.6/tactical-stream-view-v1.1.0-alpha.6.zip",
+    "bugs": "https://github.com/hoeytherac/tactical-stream-view/issues",
+    "changelog": "https://github.com/hoeytherac/tactical-stream-view/blob/main/CHANGELOG.md",
+    "license": "https://github.com/hoeytherac/tactical-stream-view/blob/main/LICENSE",
+    "readme": "https://github.com/hoeytherac/tactical-stream-view/blob/main/README.md"
 }
