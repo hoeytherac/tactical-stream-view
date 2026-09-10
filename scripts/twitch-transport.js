@@ -1,5 +1,5 @@
 const SCOPES = 'chat:read chat:edit';
-export const escapeChat = text => String(text).replace(/[&<>"'@\[\]]/g, c => `&#${c.charCodeAt(0)};`);
+export const escapeChat = text => String(text).replace(/[&<>"'\[\]]/g, c => `&#${c.charCodeAt(0)};`);
 export function outgoingText(name, text) {
   const clean = value => String(value).replace(/[\r\n\x00-\x1f]/g, ' ').trim();
   const result = `[${clean(name).slice(0, 60)}] ${clean(text)}`;
