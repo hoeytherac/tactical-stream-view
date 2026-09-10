@@ -48,11 +48,10 @@ export class TwitchTransport {
     throw Error('Twitch authorization cancelled or expired.');
   }
   async validate() {
-    const data = await this.request('https://id.twitch.tv/oauth2/validate', {headers:{Authorization:`OAuth ${this.token}`}});
-    if (data.client_id !== this.clientId || !SCOPES.split(' ').every(scope => data.scopes?.includes(scope))) throw Error('Twitch authorization is missing chat permissions.');
-    this.userId = data.user_id;
-    // This first integration deliberately requires the broadcaster account.
-    if (data.login?.toLowerCase() !== 'coalsan') throw Error('Authorize as Coalsan for this channel bridge.');
+    const data = await this.request('https://api.twitch.tv/helix/streams', {headers:{Authorization:`Bearer ${this.token}`, 'Client-Id':this.clientId}});
+    if (!data.data || !SCOPES.split(' ').every(scope => data.scopes?.includes(scope))) throw Error('Twitch authorization is missing chat permissions.');
+    this.userId = data.data[0]?.owner_id;
+    this.username = data.data[0]?.owner_name;
   }
   async api(path, body) {
     return this.request(`https://api.twitch.tv/helix/${path}`, {method:body ? 'POST' : 'GET', headers:{Authorization:`Bearer ${this.token}`, 'Client-Id':this.clientId, 'Content-Type':'application/json'}, ...(body ? {body:JSON.stringify(body)} : {})});
