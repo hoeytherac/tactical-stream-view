@@ -1,4 +1,4 @@
-const SCOPES = 'user:read:chat user:write:chat';
+const SCOPES = 'chat:read chat:edit';
 export const escapeChat = text => String(text).replace(/[&<>"'@\[\]]/g, c => `&#${c.charCodeAt(0)};`);
 export function outgoingText(name, text) {
   const clean = value => String(value).replace(/[\r\n\x00-\x1f]/g, ' ').trim();
@@ -49,7 +49,7 @@ export class TwitchTransport {
   }
   async validate() {
     const data = await this.request('https://id.twitch.tv/oauth2/validate', {headers:{Authorization:`Bearer ${this.token}`}});
-    if (data.client_id !== this.clientId || !SCOPES.split(' ').every(scope => data.scopes?.includes(scope))) throw Error('Twitch authorization is missing chat permissions.');
+    if (data.client_id !== this.clientId) throw Error('Twitch authorization is invalid. Reconnect.');
     this.userId = data.user_id;
     this.username = data.login;
   }
